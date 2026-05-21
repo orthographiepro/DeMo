@@ -220,7 +220,16 @@ class Trainer(pl.LightningModule):
         if out['new_y_hat'] is not None:
             out['y_hat'] = out['new_y_hat']
             out['pi'] = out['new_pi']
-        self.submission_handler.format_data(data, out["y_hat"], out["pi"])
+        
+        # Slice out the focal agent (index 0) to get the other agents for each batch item
+        other_track_ids = [ids[1:] for ids in data.get("agent_ids", [])] if "agent_ids" in data else None
+        if batch_idx == 0:
+            print(data.keys(), out.keys())
+        self.submission_handler.format_data(
+            data, out["y_hat"], out["pi"],
+            y_hat_others=out.get("y_hat_others"),
+            other_track_ids=other_track_ids
+        )
 
     def on_test_end(self) -> None:
         self.submission_handler.generate_submission_file()
@@ -392,4 +401,12 @@ class StreamTrainer(Trainer):
             all_outs[-1]['y_hat'] = all_outs[-1]['new_y_hat']
             all_outs[-1]['pi'] = all_outs[-1]['new_pi']
 
-        self.submission_handler.format_data(data[-1], all_outs[-1]["y_hat"], all_outs[-1]["pi"])
+        # Slice out the focal agent (index 0) to get the other agents for each batch item
+        other_track_ids = [ids[1:] for ids in data[-1].get("agent_ids", [])] if "agent_ids" in data[-1] else None
+        self.submission_handler.format_data(
+            data[-1], 
+            all_outs[-1]["y_hat"], 
+            all_outs[-1]["pi"],
+            y_hat_others=all_outs[-1].get("y_hat_others"),
+            other_track_ids=other_track_ids
+        )

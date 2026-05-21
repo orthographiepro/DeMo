@@ -72,6 +72,9 @@ class Av2Dataset(Dataset):
         ag_mask = ag_mask * data['x_valid_mask'][:, step - 1]
         ag_mask[idx] = False
 
+        agent_ids = np.array(data['agent_ids'])
+        filtered_agent_ids = np.concatenate([agent_ids[[idx]], agent_ids[ag_mask.numpy()]])
+
         # transform agents to local
         st, ed = step - self.num_historical_steps, step + self.num_future_steps
         attr = torch.cat([data['x_attr'][[idx]], data['x_attr'][ag_mask]])
@@ -125,6 +128,7 @@ class Av2Dataset(Dataset):
         vel = vel[ag_mask]
         attr = attr[ag_mask]
         valid_mask = valid_mask[ag_mask]
+        filtered_agent_ids = filtered_agent_ids[ag_mask.numpy()]
 
         # post_process
         head = head[:, :self.num_historical_steps]
@@ -210,6 +214,7 @@ class Av2Dataset(Dataset):
             'theta': theta.view(1),
             'scenario_id': data['scenario_id'],
             'track_id': cur_agent_id,
+            'agent_ids': filtered_agent_ids.tolist(),
             'city': data['city'],
             'timestamp': torch.Tensor([step * 0.1])
         }
@@ -260,6 +265,7 @@ def collate_fn(seq_batch):
 
         data['scenario_id'] = [b['scenario_id'] for b in batch]
         data['track_id'] = [b['track_id'] for b in batch]
+        data['agent_ids'] = [b['agent_ids'] for b in batch]
 
         data['origin'] = torch.cat([b['origin'] for b in batch], dim=0)
         data['theta'] = torch.cat([b['theta'] for b in batch])
