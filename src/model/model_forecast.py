@@ -13,6 +13,8 @@ try:
 except ImportError:
     RMSNorm, layer_norm_fn, rms_norm_fn = None, None, None
 
+from .embedding_export import Embedding
+export_root = "test_embeddings/"
 
 # only 'DeMo'
 class ModelForecast(nn.Module):
@@ -207,6 +209,9 @@ class ModelForecast(nn.Module):
         for blk in self.blocks:
             x_encoder = blk(x_encoder, key_padding_mask=~key_valid_mask)
         x_encoder = self.norm(x_encoder)
+
+        Embedding(x_encoder.cpu(), key_valid_mask.cpu(), data["scenario_id"] ).save(export_root + data["scenario_id"][0])
+
 
         ###### Trajectory decoding with decoupled queries ###### 
         new_y_hat = None
