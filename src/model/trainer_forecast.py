@@ -176,7 +176,15 @@ class Trainer(pl.LightningModule):
 
         return loss
 
+    def on_validation_start(self): 
+        self.on_test_start()
+
+    def on_validation_end(self):
+        self.on_test_end()
+
     def validation_step(self, data, batch_idx):
+        self.test_step(data, batch_idx)
+        return
         if isinstance(data, list):
             data = data[-1]
         out = self(data)
@@ -350,6 +358,8 @@ class StreamTrainer(Trainer):
         return sum_loss
     
     def validation_step(self, data, batch_idx):
+        self.test_step(data, batch_idx)
+        return
         memory_dict = None
         all_outs = []
         for i in range(len(data)):

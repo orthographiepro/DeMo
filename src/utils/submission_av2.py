@@ -53,8 +53,10 @@ class SubmissionAv2:
                 probability = torch.softmax(probability.double(), dim=-1)
 
             if y_hat_others is not None:
+                pos_ctr_others = data["x_centers"][:, 1:1+y_hat_others.size(1)].unsqueeze(2)
+                y_hat_others_abs = y_hat_others[..., :2].double() + pos_ctr_others.double()
                 global_y_hat_others = (
-                    torch.matmul(y_hat_others[..., :2].double(), rotate_mat.unsqueeze(1))
+                    torch.matmul(y_hat_others_abs, rotate_mat.unsqueeze(1))
                     + origin
                 )
 
